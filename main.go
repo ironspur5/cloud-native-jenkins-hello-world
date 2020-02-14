@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 )
-//hi
+//hi there
 type Server struct{}
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
