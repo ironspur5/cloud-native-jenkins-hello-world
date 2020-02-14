@@ -1,58 +1,55 @@
 pipeline {
+
     agent any
+
     environment {
         registry = "patrickguha/jenkinshelloworld"
-        GOCACHE = "/tmp"
     }
+
     stages {
-        stage('Build') {
-            agent { 
-                docker { 
-                    image 'golang' 
-                }
-            }
+       
+        stage('Cloning Git') {
             steps {
-                // Create our project directory.
-                sh 'cd ${GOPATH}/src'
-                sh 'mkdir -p ${GOPATH}/src/hello-world'
-                // Copy all files in our Jenkins workspace to our project directory.                
-                sh 'cp -r ${WORKSPACE}/* ${GOPATH}/src/hello-world'
-                // Build the app.
-                sh 'go build'               
-            }     
-        }
-        stage('Test') {
-            agent { 
-                docker { 
-                    image 'golang' 
-                }
-            }
-            steps {                 
-                // Create our project directory.
-                sh 'cd ${GOPATH}/src'
-                sh 'mkdir -p ${GOPATH}/src/hello-world'
-                // Copy all files in our Jenkins workspace to our project directory.                
-                sh 'cp -r ${WORKSPACE}/* ${GOPATH}/src/hello-world'
-                // Remove cached test results.
-                sh 'go clean -cache'
-                // Run Unit Tests.
-                sh 'go test ./... -v -short'            
+                git 'https://github.com/ironspur5/cloud-native-jenkins-hello-world'
             }
         }
-        stage('Publish') {
-            environment {
-                registryCredential = 'dockerhub'
+
+        stage('Build App') {
+            steps {
+                sh 'go build'
             }
+        }
+
+        stage('Test App') {
+            steps {
+                sh 'go test -v'
+            }
+        }
+
+        stage('Building Image') {
             steps{
                 script {
-                    def appimage = docker.build registry + ":$BUILD_NUMBER"
-                    docker.withRegistry( '', registryCredential ) {
-                        appimage.push()
-                        appimage.push('latest')
-                    }
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
         }
 
+        stage('Publish Image') {
+            steps{
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    dockerImage.push('latest')
+                }
+            }
+        }
+
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $registry:$BUILD_NUMBER"
+            } 
+        }
+
     }
+    
 }
