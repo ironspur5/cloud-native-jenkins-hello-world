@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: patrickguha/ocikubernetesapp:latest
+        image: patrickguha/jenkinshelloworld:latest
         resources:
           requests:
             cpu: 10m
