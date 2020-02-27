@@ -55,7 +55,8 @@ pipeline {
         }
         stage('Deploy') {
          steps {
-                sh 'kubectl get nodes'
+                // sh 'kubectl get nodes'
+                sh 'kubectl create -f deployment.yml -f service.yml'
             }
         }
     }
